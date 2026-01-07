@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
-import { ArrowDown, Github, Linkedin, Mail } from 'lucide-react';
+import { ArrowDown, Github, Linkedin, Mail, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const FloatingBlob = ({ className, delay = 0 }) => (
@@ -135,6 +135,7 @@ const HeroSection = () => {
               { icon: Github, href: 'https://github.com/muthumuruganharish', label: 'GitHub' },
               { icon: Linkedin, href: 'https://linkedin.com', label: 'LinkedIn' },
               { icon: Mail, href: '#contact', label: 'Email' },
+              { icon: FileDown, href: 'https://drive.google.com/uc?export=download&id=1dayfC1DEg0n8rKAKW1ZcqjysUEzXIE3O', label: 'Resume', download: 'Harish_Resume.pdf' },
             ].map((social) => (
               <motion.a
                 key={social.label}
