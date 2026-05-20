@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
 import { useInView } from 'framer-motion';
 import { useRef, useState } from 'react';
-import { Mail, MapPin, Phone, Send, Github, Linkedin, ExternalLink } from 'lucide-react';
+import { Mail, MapPin, Phone, Send, Github, Linkedin, ExternalLink, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import emailjs from '@emailjs/browser';
 
 const contactInfo = [
   {
@@ -26,22 +27,53 @@ const socialLinks = [
 
 const ContactSection = () => {
   const ref = useRef(null);
+  const formRef = useRef();
   const isInView = useInView(ref, { once: true, margin: '-100px' });
   const [formState, setFormState] = useState({
     name: '',
     email: '',
     message: '',
   });
+  const [status, setStatus] = useState({
+    loading: false,
+    success: false,
+    error: null,
+  });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Form submission logic would go here
-    console.log('Form submitted:', formState);
-    // Reset form
-    setFormState({ name: '', email: '', message: '' });
+    setStatus({ loading: true, success: false, error: null });
+
+    try {
+      // Replace these with your EmailJS service ID, template ID, and public key
+      const serviceId = 'YOUR_EMAILJS_SERVICE_ID';
+      const templateId = 'YOUR_EMAILJS_TEMPLATE_ID';
+      const publicKey = 'YOUR_EMAILJS_PUBLIC_KEY';
+
+      await emailjs.sendForm(serviceId, templateId, formRef.current, publicKey);
+      
+      setStatus({ loading: false, success: true, error: null });
+      setFormState({ name: '', email: '', message: '' });
+      
+      // Reset success message after 5 seconds
+      setTimeout(() => {
+        setStatus(prev => ({ ...prev, success: false }));
+      }, 5000);
+      
+    } catch (error) {
+      console.error('Failed to send email:', error);
+      setStatus({
+        loading: false,
+        success: false,
+        error: 'Failed to send message. Please try again later.'
+      });
+    }
   };
 
   const handleChange = (e) => {
+    if (status.error) {
+      setStatus(prev => ({ ...prev, error: null }));
+    }
     setFormState((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -147,7 +179,7 @@ const ContactSection = () => {
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <form onSubmit={handleSubmit} className="glass-card p-6 md:p-8 space-y-6">
+            <form ref={formRef} onSubmit={handleSubmit} className="glass-card p-6 md:p-8 space-y-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
                   Your Name
@@ -196,10 +228,44 @@ const ContactSection = () => {
                 />
               </div>
 
-              <Button type="submit" variant="hero" size="lg" className="w-full">
-                <Send size={18} />
-                Send Message
+              <Button 
+                type="submit" 
+                variant="hero" 
+                size="lg" 
+                className="w-full relative overflow-hidden"
+                disabled={status.loading}
+              >
+                {status.loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Sending...
+                  </>
+                ) : status.success ? (
+                  <>
+                    <CheckCircle className="mr-2 h-5 w-5" />
+                    Message Sent!
+                  </>
+                ) : (
+                  <>
+                    <Send size={18} className="mr-2" />
+                    Send Message
+                  </>
+                )}
               </Button>
+              
+              {status.error && (
+                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm flex items-center">
+                  <XCircle className="mr-2 h-4 w-4" />
+                  {status.error}
+                </div>
+              )}
+              
+              {status.success && (
+                <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-green-500 text-sm flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Your message has been sent successfully!
+                </div>
+              )}
             </form>
           </motion.div>
         </div>
